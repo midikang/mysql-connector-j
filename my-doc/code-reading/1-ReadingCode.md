@@ -1,5 +1,7 @@
 # Reading mysql jdbc driver source code
 
+09-30-16 - Version 5.1.40
+
 ## Generate api documentation to help code reading
 ```
 javadoc -d docs -sourcepath /home/ubuntu/workspace/java/mysql-connector-j/src -subpackages com:org
