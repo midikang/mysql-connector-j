@@ -23,7 +23,7 @@ class Driver extends NonRegisteringDriver implements java.sql.Driver {
 ```
 
 
-### com.mysql.jdbc.NonRegisteringDriver
+### com.mysql.jdbc.NonRegisteringDriver#connect
 ```
     static {
         AbandonedConnectionCleanupThread referenceThread = new AbandonedConnectionCleanupThread();
@@ -41,10 +41,14 @@ connect()
         return connectReplicationConnection(url, info);
     }
     
+    if (!"1".equals(props.getProperty(NUM_HOSTS_PROPERTY_KEY))) {
+            return connectFailover(url, info);
+    }
+    
     Connection newConn = com.mysql.jdbc.ConnectionImpl.getInstance(host(props), port(props), props, database(props), url);
 ```
 
-### com.mysql.jdbc.ConnectionImpl
+### com.mysql.jdbc.ConnectionImpl#getInstance
 Entry method
 getInstance()
 
@@ -59,6 +63,7 @@ If jdbc3 (or older), call ConnectionImpl(), otherwise Util.handleNewInstance(), 
         return (Connection) Util.handleNewInstance(JDBC_4_CONNECTION_CTOR,
                 new Object[] { hostToConnectTo, Integer.valueOf(portToConnectTo), info, databaseToConnectTo, url }, null);
 ```
+// Jdbc3 or older
 ConnectionImpl()
 
 // Creates an IO channel to the server
@@ -77,7 +82,7 @@ Create io instance and doHandshake.
         this.io.doHandshake(this.user, this.password, this.database);
 ```
 
-### new MysqlIO()
+### MysqlIO#MysqlIO()
 ```
         this.socketFactoryClassName = socketFactoryClassName;
         this.socketFactory = createSocketFactory();
@@ -119,3 +124,18 @@ Return java.net.Socket as connection
 ```
 
 
+## Jdbc4 in Util.handleNewInstance
+
+```
+return (Connection) Util.handleNewInstance(JDBC_4_CONNECTION_CTOR,
+                new Object[] { hostToConnectTo, Integer.valueOf(portToConnectTo), info, databaseToConnectTo, url }, null);
+```
+
+What is JDBC_4_CONNECTION_CTOR ?
+ConnectionImpl static block
+```
+JDBC_4_CONNECTION_CTOR = Class.forName("com.mysql.jdbc.JDBC4Connection")
+                        .getConstructor(new Class[] { String.class, Integer.TYPE, Properties.class, String.class, String.class });
+```
+
+check com.mysql.jdbc.JDBC4Connection
